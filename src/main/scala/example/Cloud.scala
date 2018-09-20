@@ -2,6 +2,6 @@ package example
 
 object Cloud {
   def main(args: Array[String]) : Unit = {
-  println("I am cloud: " + this.getClass.getName)
+  println("This service is running in the cloud! " + this.getClass.getName)
 }
 }

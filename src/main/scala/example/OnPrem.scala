@@ -1,5 +1,5 @@
 package example
 
 object OnPrem  extends App {
-  println("I am on prem: " + this.getClass.getName)
+  println("This service is running on prem [" + this.getClass.getName + "]")
 }

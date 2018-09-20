@@ -1,35 +1,17 @@
-//name:="Test"
-//scalaVersion := "2.12.6"
-//version := "1.0"
-//organization := "example"
-// Switch the entry point of the app by setting this value
-//mainClass in assembly := Some("example.OnPrem")
-//mainClass in assembly := Some("example.Cloud")
-//assemblyJarName in assembly := "test.jar"
-// Test that the entry point is set correctly :
-// java -jar target/scala-2.12/test.jar
-
 lazy val root = (project in file("."))
   .settings(
-    name:="multiball",
     scalaVersion := "2.12.6",
     version := "1.0",
     organization := "example",
-    // Switch the entry point of the app by setting this value
-    mainClass in assembly := Some("example.OnPrem"),
-    //mainClass in assembly := Some("example.Cloud")
-    assemblyJarName in assembly := "test.jar"
-    // Test that the entry point is set correctly :
-    // java -jar target/scala-2.12/test.jar
   )
 
 
 lazy val Cloud = project
   .settings(
     name:="CloudProject",
-    organization := "example",
-    scalaVersion := "2.12.6",
-    version := "1.0",
+    // Set the entry point using the fully qualified name
+    // Settings for the compile and package tasks are set seperately
+    mainClass in (Compile, run) := Some("example.Cloud"),
     mainClass in assembly := Some("example.Cloud"),
     assemblyJarName in assembly := "cloud.jar"
   )
@@ -38,9 +20,7 @@ lazy val Cloud = project
 lazy val OnPrem = project
     .settings(
       name:="OnPremProject",
-      organization := "example",
-      scalaVersion := "2.12.6",
-      version := "1.0",
+      mainClass in (Compile, run) := Some("example.OnPrem"),
       mainClass in assembly := Some("example.OnPrem"),
       assemblyJarName in assembly := "onprem.jar"
     )
