@@ -1,2 +1,5 @@
 target
 project/target
+# There is no code in the Cloud or OnPrem directories
+Cloud
+OnPrem
