@@ -3,10 +3,10 @@ lazy val root = (project in file("."))
     scalaVersion := "2.12.6",
     version := "1.0",
     organization := "example",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test
   )
 
-
-lazy val Cloud = project
+lazy val Cloud  = project
   .settings(
     name:="CloudProject",
     // Set the entry point using the fully qualified name
@@ -15,7 +15,10 @@ lazy val Cloud = project
     mainClass in assembly := Some("example.Cloud"),
     assemblyJarName in assembly := "cloud.jar"
   )
+  // Include all the code in the root project in this project
   .dependsOn(root)
+  // Any task performed on this project (for example running tests) will also be performed on root
+  .aggregate(root)
 
 lazy val OnPrem = project
     .settings(
@@ -25,26 +28,4 @@ lazy val OnPrem = project
       assemblyJarName in assembly := "onprem.jar"
     )
     .dependsOn(root)
-
-/*
-lazy val OnPremProject = (project in file("."))
-  .settings(
-    name:="OnPrem",
-    organization := "example",
-    scalaVersion := "2.12.6",
-    version := "1.0",
-    mainClass in (Compile,assembly) := Some("example.OnPrem"),
-    assemblyJarName in assembly := "onprem.jar"
-  )
-*/
-
-/*
-lazy val commonSettings = Seq(
-  scalaVersion := "2.12.6",
-  version := "1.0"
-)
-
-lazy val libraries = Seq(
-
-)
-*/
+    .aggregate(root)

@@ -1,5 +1,5 @@
 package example
 
 object OnPrem  extends App {
-  println("This service is running on prem [" + this.getClass.getName + "]")
+  println(common.Formatter.outputText("This service is running on prem", this))
 }
