@@ -1,5 +1,8 @@
 package example
 
-object OnPrem extends App {
-  println(common.Formatter.outputText("This service is running on prem", this))
+object OnPrem {
+  def main(args: Array[String]): Unit = {
+    println(common.Formatter.outputText("This service is running on prem", this))
+  }
+
 }
