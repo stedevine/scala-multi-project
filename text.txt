@@ -1,0 +1,139 @@
+I had to modify a service to support it running in two modes:
+"On Prem" - hosted by my company.
+"Cloud" - running on managed services in the cloud.
+
+In each of these modes almost all the code is shared but there are a few things that are mode specific.
+
+The service is implemented in Scala and built using SBT.
+
+To reduce complexity and make it clear what code belonged to which mode I refactored the project with the following goals in mind:
+
+1. The build should produce two different jars
+2. The jars will have different Main classes but will otherwise behave the same
+
+A working example of the solution to this problem is checked in here : https://github.com/stedevine/scala-multi-project
+
+The structure of the code is :
+
+./src/main/scala/example/Cloud.scala              Main method for cloud mode
+./src/main/scala/example/OnPrem.scala             Main method for onprem mode
+./src/main/scala/example/common/Service.scala     Shared service code
+
+./src/test/scala/example/common/TestService.scala Unit tests
+
+
+Getting this work properly had several steps:
+
+1. Split the project into a root project, which defines the code that is built and two sub-projects "Cloud" and "OnPrem"
+
+lazy val service = (project in file("."))
+  .settings(
+    scalaVersion := "2.12.6",
+    version := "1.0",
+    organization := "example",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test,
+  )
+
+lazy val Cloud  = project
+  .settings(
+    name:="CloudProject",
+  )
+  .dependsOn(service)
+
+This successfully creates a jar but there's no main method
+sdevine@sdevine-desk:~/multiball$ java -jar ./Cloud/target/scala-2.12/CloudProject-assembly-0.1.0-SNAPSHOT.jar
+no main manifest attribute, in ./Cloud/target/scala-2.12/CloudProject-assembly-0.1.0-SNAPSHOT.jar
+
+2. Add the main method for the Compile, run and assembly configurations
+
+lazy val Cloud  = project
+  .settings(
+    name:="CloudProject",
+
+    // Set the entry point using the fully qualified name.
+    // Settings for the compile and assembly configurations are set separately
+    mainClass in Compile := Some("example.Cloud"),
+    mainClass in assembly := Some("example.Cloud"),
+
+  )
+  .dependsOn(service)
+
+sdevine@sdevine-desk:~/multiball$ java -jar ./Cloud/target/scala-2.12/CloudProject-assembly-0.1.0-SNAPSHOT.jar
+This service is running in the cloud! [example.Cloud$]
+
+sbt:CloudProject> run
+[warn] Multiple main classes detected.  Run 'show discoveredMainClasses' to see the list
+[info] Packaging /home/sdevine/multiball/target/scala-2.12/service_2.12-1.0.jar ...
+[info] Done packaging.
+[info] Packaging /home/sdevine/multiball/Cloud/target/scala-2.12/cloudproject_2.12-0.1.0-SNAPSHOT.jar ...
+[info] Done packaging.
+[info] Running example.Cloud
+This service is running in the cloud! [example.Cloud$]
+[success] Total time: 0 s, completed Sep 27, 2018 4:29:38 PM
+
+Great! but the tests don't run during the assembly phase
+sbt:CloudProject> assembly
+[info] Strategy 'discard' was applied to a file (Run the task at debug level to see details)
+[info] Assembly up to date: /home/sdevine/multiball/Cloud/target/scala-2.12/CloudProject-assembly-0.1.0-SNAPSHOT.jar
+[success] Total time: 1 s, completed Sep 27, 2018 4:32:16 PM
+
+In fact no tests are detected!
+
+sbt:CloudProject> test
+[success] Total time: 0 s, completed Sep 27, 2018 4:32:17 PM
+
+3. Point the test configuration for the subproject to the test configuration in the service project:
+
+lazy val Cloud  = project
+  .settings(
+    name:="CloudProject",
+    mainClass in Compile := Some("example.Cloud"),
+    mainClass in assembly := Some("example.Cloud"),
+
+    // Tests are defined the service project, run them whenever we
+    // execute the test tasks in the Test or assembly configuration.
+    test in Test := (service / Test / executeTests).value,
+    testOnly in Test := (service / Test / testOnly).evaluated,
+    test in assembly := (service / Test / executeTests).value,
+
+  )
+  .dependsOn(service)
+
+sbt:CloudProject> assembly
+[info] TestService:
+[info] - output text is formatted
+[info] Strategy 'discard' was applied to a file (Run the task at debug level to see details)
+[info] Assembly up to date: /home/sdevine/multiball/Cloud/target/scala-2.12/CloudProject-assembly-0.1.0-SNAPSHOT.jar
+[success] Total time: 0 s, completed Sep 27, 2018 4:34:04 PM
+
+Almost there, let's just clean some things up
+
+lazy val service = (project in file("."))
+  .settings(
+    scalaVersion := "2.12.6",
+    version := "1.0",
+    organization := "example",
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.5" % Test,
+  )
+  // Don't build a jar for the root project, there's no entry point
+  // and it's not used as a stand alone library.
+.disablePlugins(sbtassembly.AssemblyPlugin)
+
+lazy val Cloud  = project
+  .settings(
+    name:="CloudProject",
+    mainClass in (Compile, run) := Some("example.Cloud"),
+    mainClass in assembly := Some("example.Cloud"),
+
+    test in Test := (service / Test / executeTests).value,
+    test in assembly := (service / Test / executeTests).value,
+
+    // Write the output under the common target directory
+    // otherwise we have to include cloud/ and onprem in the .gitignore file
+    // and give the jar a name
+    target := file("target/cloud"),
+    assemblyJarName in assembly := "cloud.jar"
+  )
+  // The compile configuration depends on the compile configuration for root
+  // because that's where the code lives.
+.dependsOn(service)
