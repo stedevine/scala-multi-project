@@ -3,55 +3,58 @@
 
 Example of how to configure sbt to build multiple projects that share a code base. Each project has a different main method :
 
-Build the Cloud project in sbt
+Build the cloud project in sbt
 ```sbt
-sbt:root> projects
+sbt:service> projects
 [info] In file:/home/sdevine/multiball/
-[info] 	   Cloud
-[info] 	   OnPrem
-[info] 	 * root
-sbt:root> project Cloud
-[info] Set current project to CloudProject (in build file:/home/sdevine/multiball/)
-sbt:CloudProject> assembly
-[info] Updating root...
-[info] Formatting 1 Scala source ProjectRef(uri("file:/home/sdevine/multiball/"), "root")(test) ...
-[info] Done updating.
+[info] 	   cloud
+[info] 	   onPrem
+[info] 	 * service
+
+sbt:service> project cloud
+[info] Set current project to cloud (in build file:/home/sdevine/multiball/)
+
+
+sbt:cloud> assembly
 [info] Updating ...
-[info] Formatting 3 Scala sources ProjectRef(uri("file:/home/sdevine/multiball/"), "root")(compile) ...
 [info] Done updating.
-[info] Compiling 3 Scala sources to /home/sdevine/multiball/target/scala-2.12/classes ...
-[info] Done compiling.
-[info] Compiling 1 Scala source to /home/sdevine/multiball/target/scala-2.12/test-classes ...
-[info] Done compiling.
-[info] TestFormatter:
+[info] TestService:
 [info] - output text is formatted
+[info] Run completed in 276 milliseconds.
+[info] Total number of tests run: 1
+[info] Suites: completed 1, aborted 0
+[info] Tests: succeeded 1, failed 0, canceled 0, ignored 0, pending 0
+[info] All tests passed.
 [info] Strategy 'discard' was applied to a file (Run the task at debug level to see details)
 [info] Packaging /home/sdevine/multiball/target/cloud/scala-2.12/cloud.jar ...
 [info] Done packaging.
-[success] Total time: 2 s, completed Sep 26, 2018 4:16:16 PM
+[success] Total time: 2 s, completed Sep 28, 2018 10:32:35 AM
 
 ```
 
 The jar runs the main method in example.Cloud
 ```bash
-sdevine@sdevine-desk:~/multiball$ java -jar target/cloud/scala-2.12/cloud.jar 
+sdevine@sdevine-desk:~/multiball$ java -jar target/cloud/scala-2.12/cloud.jar
 This service is running in the cloud! [example.Cloud$]
 
 ```
 
 Build the OnPrem project in sbt
 ```sbt
-sbt:CloudProject> project OnPrem
-[info] Set current project to OnPremProject (in build file:/home/sdevine/multiball/)
-sbt:OnPremProject> assembly
-[info] Updating ...
-[info] Done updating.
-[info] TestFormatter:
+sbt:cloud> project onPrem
+[info] Set current project to onPrem (in build file:/home/sdevine/multiball/)
+sbt:onPrem> clean / assembly
+[info] TestService:
 [info] - output text is formatted
+[info] Run completed in 98 milliseconds.
+[info] Total number of tests run: 1
+[info] Suites: completed 1, aborted 0
+[info] Tests: succeeded 1, failed 0, canceled 0, ignored 0, pending 0
+[info] All tests passed.
 [info] Strategy 'discard' was applied to a file (Run the task at debug level to see details)
 [info] Packaging /home/sdevine/multiball/target/onprem/scala-2.12/onprem.jar ...
 [info] Done packaging.
-[success] Total time: 3 s, completed Sep 26, 2018 4:18:03 PM
+[success] Total time: 1 s, completed Sep 28, 2018 10:34:00 AM
 
 ```
 The jar runs the main method in example.OnPrem
@@ -61,4 +64,4 @@ This service is running on prem [example.OnPrem$]
 
 ```
 
-Tests are executed when each assembly is built. 
+Tests are executed when each assembly is built.
