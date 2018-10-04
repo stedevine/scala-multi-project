@@ -1,6 +1,25 @@
 // Multi project example
 // Uses the same source files to build two different jars
-// each with its own main method.
+// each with its own defined main method.
+
+// the OnPrem main class is defined in the service directory, the clound main class is in it's own source tree
+// This means the cloud jar will actually have two main methods:
+
+// java -cp /home/sdevine/multiball/target/cloud/scala-2.12/cloud.jar example.Cloud
+// This service is running in the cloud! [example.Cloud$]
+// java -cp /home/sdevine/multiball/target/cloud/scala-2.12/cloud.jar example.OnPrem
+// This service is running on prem [example.OnPrem$]
+
+// It only has one default main method
+// java -jar /home/sdevine/multiball/target/cloud/scala-2.12/cloud.jar
+// This service is running in the cloud! [example.Cloud$]
+
+// The OnPrem jar will only have one:
+// java -cp /home/sdevine/multiball/target/onprem/scala-2.12/onprem.jar example.OnPrem
+// This service is running on prem [example.OnPrem$]
+// java -cp /home/sdevine/multiball/target/onprem/scala-2.12/onprem.jar example.Cloud
+// Error: Could not find or load main class example.Cloud
+
 
 lazy val service = (project in file("."))
   .settings(
@@ -32,7 +51,7 @@ lazy val cloud  = project
     assemblyJarName in assembly := "cloud.jar"
   )
   // The compile configuration depends on the compile configuration for service
-  // because that's where the code lives.
+  // because that's where the common code lives.
   .dependsOn(service)
 
 lazy val onPrem = project
@@ -45,4 +64,5 @@ lazy val onPrem = project
       target := file("target/onprem"),
       assemblyJarName in assembly := "onprem.jar"
     )
+    // For on prem all the code lives under service
     .dependsOn(service)
